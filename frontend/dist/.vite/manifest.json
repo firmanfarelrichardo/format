@@ -1,0 +1,19 @@
+{
+  "src/main.js": {
+    "file": "assets/main-DzVYbUyP.js",
+    "name": "main",
+    "src": "src/main.js",
+    "isEntry": true,
+    "css": [
+      "assets/styles-D5FOGCxS.css"
+    ]
+  },
+  "src/main.scss": {
+    "file": "assets/styles-D5FOGCxS.css",
+    "src": "src/main.scss",
+    "isEntry": true,
+    "names": [
+      "styles.css"
+    ]
+  }
+}

@@ -1,0 +1,167 @@
+<?php
+session_start();
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'superadmin' && $_SESSION['user_role'] !== 'admin') {
+    header("Location: login.html");
+    exit();
+}
+include 'header.php';
+// Koneksi ke Database
+$host = "localhost"; $user = "root"; $pass = ""; $db = "oai";
+$conn = new mysqli($host, $user, $pass, $db);
+if ($conn->connect_error) { die("Koneksi gagal: " . $conn->connect_error); }
+
+$message = '';
+// Logika untuk CRUD Pengelola
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST['add'])) {
+        $nip = $_POST['nip'];
+        $nama = $_POST['nama'];
+        $email = $_POST['email'];
+        $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+        $role = 'pengelola';
+
+        $stmt = $conn->prepare("INSERT INTO users (nip, nama, email, password, role) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssss", $nip, $nama, $email, $password, $role);
+        if ($stmt->execute()) { $message = "Pengelola berhasil ditambahkan."; } else { $message = "Error: " . $stmt->error; }
+        $stmt->close();
+    } elseif (isset($_POST['edit'])) {
+        $id = $_POST['id'];
+        $nama = $_POST['nama'];
+        $email = $_POST['email'];
+        $nip = $_POST['nip'];
+        $stmt = $conn->prepare("UPDATE users SET nama = ?, email = ?, nip = ? WHERE id = ?");
+        $stmt->bind_param("sssi", $nama, $email, $nip, $id);
+        if ($stmt->execute()) { $message = "Pengelola berhasil diubah."; } else { $message = "Error: " . $stmt->error; }
+        $stmt->close();
+    } elseif (isset($_POST['delete'])) {
+        $id = $_POST['id'];
+        $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        if ($stmt->execute()) { $message = "Pengelola berhasil dihapus."; } else { $message = "Error: " . $stmt->error; }
+        $stmt->close();
+    }
+}
+?>
+<title>Manajemen Pengelola</title>
+<main class="page-container">
+    <div class="container">
+        <div class="page-header">
+            <h1>Manajemen Akun Pengelola</h1>
+            <p>Tambah, edit, atau hapus akun pengelola.</p>
+        </div>
+        
+        <?php if ($message): ?>
+            <div class="alert alert-info"><?php echo $message; ?></div>
+        <?php endif; ?>
+
+        <div class="admin-form-container">
+            <h3>Tambah Pengelola Baru</h3>
+            <form action="manage_pengelola.php" method="POST" class="admin-form">
+                <input type="hidden" name="add" value="1">
+                <div class="form-group">
+                    <label for="nip">NIP</label>
+                    <input type="text" id="nip" name="nip" required>
+                </div>
+                <div class="form-group">
+                    <label for="nama">Nama</label>
+                    <input type="text" id="nama" name="nama" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="submit-btn">Tambah Pengelola</button>
+            </form>
+        </div>
+        
+        <hr style="margin: 40px 0;">
+
+        <h3>Daftar Pengelola</h3>
+        <div class="table-responsive">
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>NIP</th>
+                        <th>Nama</th>
+                        <th>Email</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $result = $conn->query("SELECT id, nip, nama, email FROM users WHERE role = 'pengelola'");
+                    if ($result->num_rows > 0) {
+                        while($row = $result->fetch_assoc()) {
+                            echo '<tr>';
+                            echo '<td>' . htmlspecialchars($row['nip']) . '</td>';
+                            echo '<td>' . htmlspecialchars($row['nama']) . '</td>';
+                            echo '<td>' . htmlspecialchars($row['email']) . '</td>';
+                            echo '<td>';
+                            echo '<a href="#" class="action-btn" onclick="openEditModal('.$row['id'].', \''.$row['nip'].'\', \''.$row['nama'].'\', \''.$row['email'].'\')">Edit</a> ';
+                            echo '<a href="#" class="action-btn-secondary" onclick="document.getElementById(\'delete-form-'.$row['id'].'\').submit();">Hapus</a>';
+                            echo '<form id="delete-form-'.$row['id'].'" action="manage_pengelola.php" method="POST" style="display:none;">';
+                            echo '<input type="hidden" name="delete" value="1">';
+                            echo '<input type="hidden" name="id" value="'.$row['id'].'">';
+                            echo '</form>';
+                            echo '</td>';
+                            echo '</tr>';
+                        }
+                    } else {
+                        echo '<tr><td colspan="4">Tidak ada akun pengelola.</td></tr>';
+                    }
+                    $conn->close();
+                    ?>
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="editModal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h3>Edit Pengelola</h3>
+                <form action="manage_pengelola.php" method="POST">
+                    <input type="hidden" name="edit" value="1">
+                    <input type="hidden" id="edit-id" name="id">
+                    <div class="form-group">
+                        <label for="edit-nip">NIP</label>
+                        <input type="text" id="edit-nip" name="nip" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-nama">Nama</label>
+                        <input type="text" id="edit-nama" name="nama" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-email">Email</label>
+                        <input type="email" id="edit-email" name="email" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Simpan Perubahan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    function openEditModal(id, nip, nama, email) {
+        document.getElementById('edit-id').value = id;
+        document.getElementById('edit-nip').value = nip;
+        document.getElementById('edit-nama').value = nama;
+        document.getElementById('edit-email').value = email;
+        document.getElementById('editModal').style.display = 'block';
+    }
+
+    document.querySelector('.close-btn').onclick = function() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('editModal')) {
+            document.getElementById('editModal').style.display = 'none';
+        }
+    }
+</script>
+<?php include 'footer.php'; ?>
