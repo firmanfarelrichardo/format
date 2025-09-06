@@ -1,5 +1,5 @@
 <?php 
-include 'header.php';
+include '../layout/header.php';
 
 // --- PENGAMBILAN PARAMETER ---
 $journal_id = isset($_GET['id']) && is_numeric($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -147,5 +147,5 @@ $articles_result = $data_stmt->get_result();
 <?php 
 $data_stmt->close();
 $conn->close();
-include 'footer.php'; 
+include '../layout/footer.php'; 
 ?>

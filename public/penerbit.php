@@ -1,5 +1,5 @@
 <?php
-include 'header.php';
+include '../layout/header.php';
 
 // --- PENGATURAN PAGINASI ---
 $results_per_page = 10;
@@ -106,7 +106,7 @@ $total_pages = ceil($total_results / $results_per_page);
 
 <?php
 $conn->close();
-include 'footer.php';
+include '../layout/footer.php';
 ?>
 </body>
 </html>

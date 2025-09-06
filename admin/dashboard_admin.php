@@ -3,7 +3,7 @@ session_start();
 
 // Keamanan: Cek apakah user sudah login dan role-nya adalah 'admin' atau 'superadmin'
 if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'admin' && $_SESSION['user_role'] !== 'superadmin')) {
-    header("Location: login.html");
+    header("Location: ../public/login.html");
     exit();
 }
 

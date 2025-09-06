@@ -1,5 +1,5 @@
 <?php
-include 'header.php';
+include '../layout/header.php';
 
 // --- KONEKSI DATABASE ---
 $host = "localhost"; $user = "root"; $pass = ""; $db = "oai";
@@ -142,7 +142,7 @@ $stats_data_for_table = array_reverse($stats_data_for_chart);
 
 <?php
 $conn->close();
-include 'footer.php';
+include '../layout/footer.php';
 ?>
 </body>
 </html>

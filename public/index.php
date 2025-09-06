@@ -1,4 +1,4 @@
-<?php include 'header.php'; ?>
+<?php include '../layout/header.php'; ?>
 
 <main>
     <section class="hero-banner">
@@ -102,6 +102,6 @@
     </section>
 </main>
 
-<?php include 'footer.php'; ?>
+<?php include '../layout/footer.php'; ?>
 </body>
 </html>

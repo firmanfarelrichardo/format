@@ -1,4 +1,4 @@
-<?php include 'header.php'; ?>
+<?php include '../layout/header.php'; ?>
 
 <main>
     <div class="page-title-container">
@@ -36,4 +36,4 @@
     </div>
 </main>
 
-<?php include 'footer.php'; ?>
+<?php include '../layout/footer.php'; ?>

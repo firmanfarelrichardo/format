@@ -1,5 +1,5 @@
 <?php
-include 'header.php';
+include '../layout/header.php';
 
 // Pengaturan Pagination
 $results_per_page = 10; // Jumlah hasil per halaman

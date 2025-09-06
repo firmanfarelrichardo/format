@@ -1,5 +1,5 @@
 <?php
-include 'header.php';
+include '../layout/header.php';
 
 // --- KONEKSI DATABASE ---
 $host = "localhost"; $user = "root"; $pass = ""; $db = "oai";
@@ -119,7 +119,7 @@ $count_stmt->close();
 
 <?php
 $conn->close();
-include 'footer.php';
+include '../layout/footer.php';
 ?>
 </body>
 </html>

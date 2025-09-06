@@ -1,18 +1,26 @@
 <?php
+// FILE: manage_pengelola.php
+// Fungsi: Halaman admin untuk mengelola akun pengelola (tambah, edit, hapus).
+// Tujuan: Memungkinkan superadmin atau admin mengelola pengguna dengan role 'pengelola'.
+
 session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'superadmin' && $_SESSION['user_role'] !== 'admin') {
-    header("Location: login.html");
+
+// Mengamankan halaman: hanya bisa diakses oleh admin dan superadmin
+if (!isset($_SESSION['user_id']) || ($_SESSION['user_role'] !== 'superadmin' && $_SESSION['user_role'] !== 'admin')) {
+    header("Location: ../login.html");
     exit();
 }
-include 'header.php';
-// Koneksi ke Database
-$host = "localhost"; $user = "root"; $pass = ""; $db = "oai";
-$conn = new mysqli($host, $user, $pass, $db);
-if ($conn->connect_error) { die("Koneksi gagal: " . $conn->connect_error); }
+
+// Sertakan file koneksi database dan header
+include '../layout/header.php';
+require_once '../database/db.php';
 
 $message = '';
-// Logika untuk CRUD Pengelola
+$conn = connect_to_database();
+
+// --- Logika CRUD untuk Pengelola ---
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Menambahkan pengelola baru
     if (isset($_POST['add'])) {
         $nip = $_POST['nip'];
         $nama = $_POST['nama'];
@@ -22,27 +30,56 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $stmt = $conn->prepare("INSERT INTO users (nip, nama, email, password, role) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("sssss", $nip, $nama, $email, $password, $role);
-        if ($stmt->execute()) { $message = "Pengelola berhasil ditambahkan."; } else { $message = "Error: " . $stmt->error; }
+        if ($stmt->execute()) {
+            $message = "Pengelola berhasil ditambahkan.";
+        } else {
+            $message = "Error: " . $stmt->error;
+        }
         $stmt->close();
-    } elseif (isset($_POST['edit'])) {
+    }
+    // Mengubah data pengelola
+    elseif (isset($_POST['edit'])) {
         $id = $_POST['id'];
         $nama = $_POST['nama'];
         $email = $_POST['email'];
         $nip = $_POST['nip'];
+        
         $stmt = $conn->prepare("UPDATE users SET nama = ?, email = ?, nip = ? WHERE id = ?");
         $stmt->bind_param("sssi", $nama, $email, $nip, $id);
-        if ($stmt->execute()) { $message = "Pengelola berhasil diubah."; } else { $message = "Error: " . $stmt->error; }
+        if ($stmt->execute()) {
+            $message = "Pengelola berhasil diubah.";
+        } else {
+            $message = "Error: " . $stmt->error;
+        }
         $stmt->close();
-    } elseif (isset($_POST['delete'])) {
+    }
+    // Menghapus pengelola
+    elseif (isset($_POST['delete'])) {
         $id = $_POST['id'];
         $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
         $stmt->bind_param("i", $id);
-        if ($stmt->execute()) { $message = "Pengelola berhasil dihapus."; } else { $message = "Error: " . $stmt->error; }
+        if ($stmt->execute()) {
+            $message = "Pengelola berhasil dihapus.";
+        } else {
+            $message = "Error: " . $stmt->error;
+        }
         $stmt->close();
     }
 }
+
+// Mengambil data pengelola untuk ditampilkan
+$pengelola_list = [];
+$result = $conn->query("SELECT id, nip, nama, email FROM users WHERE role = 'pengelola'");
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $pengelola_list[] = $row;
+    }
+}
+$conn->close();
 ?>
-<title>Manajemen Pengelola</title>
+
+<title>Manajemen Pengelola - Portal Jurnal</title>
+
 <main class="page-container">
     <div class="container">
         <div class="page-header">
@@ -92,29 +129,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    $result = $conn->query("SELECT id, nip, nama, email FROM users WHERE role = 'pengelola'");
-                    if ($result->num_rows > 0) {
-                        while($row = $result->fetch_assoc()) {
-                            echo '<tr>';
-                            echo '<td>' . htmlspecialchars($row['nip']) . '</td>';
-                            echo '<td>' . htmlspecialchars($row['nama']) . '</td>';
-                            echo '<td>' . htmlspecialchars($row['email']) . '</td>';
-                            echo '<td>';
-                            echo '<a href="#" class="action-btn" onclick="openEditModal('.$row['id'].', \''.$row['nip'].'\', \''.$row['nama'].'\', \''.$row['email'].'\')">Edit</a> ';
-                            echo '<a href="#" class="action-btn-secondary" onclick="document.getElementById(\'delete-form-'.$row['id'].'\').submit();">Hapus</a>';
-                            echo '<form id="delete-form-'.$row['id'].'" action="manage_pengelola.php" method="POST" style="display:none;">';
-                            echo '<input type="hidden" name="delete" value="1">';
-                            echo '<input type="hidden" name="id" value="'.$row['id'].'">';
-                            echo '</form>';
-                            echo '</td>';
-                            echo '</tr>';
-                        }
-                    } else {
-                        echo '<tr><td colspan="4">Tidak ada akun pengelola.</td></tr>';
-                    }
-                    $conn->close();
-                    ?>
+                    <?php if (!empty($pengelola_list)): ?>
+                        <?php foreach ($pengelola_list as $row): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($row['nip']); ?></td>
+                                <td><?php echo htmlspecialchars($row['nama']); ?></td>
+                                <td><?php echo htmlspecialchars($row['email']); ?></td>
+                                <td>
+                                    <a href="#" class="action-btn" onclick="openEditModal(<?php echo $row['id']; ?>, '<?php echo htmlspecialchars($row['nip']); ?>', '<?php echo htmlspecialchars($row['nama']); ?>', '<?php echo htmlspecialchars($row['email']); ?>')">Edit</a>
+                                    <a href="#" class="action-btn-secondary" onclick="document.getElementById('delete-form-<?php echo $row['id']; ?>').submit();">Hapus</a>
+                                    <form id="delete-form-<?php echo $row['id']; ?>" action="manage_pengelola.php" method="POST" style="display:none;">
+                                        <input type="hidden" name="delete" value="1">
+                                        <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="4">Tidak ada akun pengelola.</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -164,4 +199,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 </script>
-<?php include 'footer.php'; ?>
+<?php include '../layout/footer.php'; ?>

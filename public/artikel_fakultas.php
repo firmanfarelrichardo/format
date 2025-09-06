@@ -1,5 +1,5 @@
 <?php 
-include 'header.php';
+include '../layout/header.php';
 
 // --- PENGATURAN & PENGAMBILAN PARAMETER ---
 $results_per_page = 10;
@@ -109,5 +109,5 @@ $result = $data_stmt->get_result();
 <?php 
 $data_stmt->close();
 $conn->close();
-include 'footer.php'; 
+include '../layout/footer.php'; 
 ?>
